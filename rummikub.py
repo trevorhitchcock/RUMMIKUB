@@ -1,29 +1,10 @@
-import random
 from typing import List, Dict
+
+from classes import Player, Tile, Joker
+from game_functions import draw_tiles, place_tile, rearrange_board
 
 STARTING_HAND_SIZE = 14
 
-# base class to represent a generic tile
-class Tile:
-    def __init__(self, color: str, value: int):
-        self.color = color
-        self.value = value
-
-# subclass to represent a joker
-class Joker(Tile):
-    def __init__(self):
-        super().__init__(color="JOKER", value=float('inf'))
-
-class Player:
-    def __init__(self, name: str, hand_tiles: List[Tile]):
-        self.name = name
-        self.hand_tiles = hand_tiles
-
-    def __str__(self):
-        tiles_str = ", ".join(
-            [f"{tile.color} {tile.value}" for tile in self.hand_tiles]
-        )
-        return f"Player: {self.name}\nTiles: {tiles_str}"
 
 def set_players() -> int:
     print("How many players would like to play? (2-4)")
@@ -58,37 +39,11 @@ def generate_draw_pile() -> Dict[str,int]:
     
     return draw_pile
 
-def draw_tiles(draw_pile: Dict[str,int]) -> List[str]:
-    current_hand = []
-    
-    while len(current_hand) != STARTING_HAND_SIZE:
-        # pick random tile
-        random_tile = random.choice(list(draw_pile.keys()))
-
-        # if there are any of the picked tiles left in the draw pile
-        if draw_pile[random_tile] > 0:
-            draw_pile[random_tile] -= 1 # subtract 1 because it has been picked
-            current_hand.append(random_tile) # add to player hand
-        
-    return current_hand
-
-def convert_str_to_Tile(player_tiles_str: str) -> List[Tile]:
-    player_tiles_Tile = []
-
-    for tile in player_tiles_str:
-        if tile == 'joker':
-            player_tiles_Tile.append(Joker())
-        else:
-            arr = tile.split('_')
-            color = arr[0]
-            value = int(arr[1])
-            player_tiles_Tile.append(Tile(color,value,))
-    return player_tiles_Tile
 
 def main():
     global STARTING_HAND_SIZE
 
-    num_players = 2 #set_players()
+    num_players = 1 #set_players()
     players = []
     draw_pile = generate_draw_pile()
 
@@ -96,17 +51,37 @@ def main():
         # start players at 1
         player_name = str(player + 1)
 
-        # draw tiles to player's hand
-        player_tiles_str = draw_tiles(draw_pile)
-
-        # convert generated tile names to Tile objects
-        player_tiles_Tile = convert_str_to_Tile(player_tiles_str)
+        # draw tiles to player's hand (14 to start the game)
+        player_tiles_str = draw_tiles(draw_pile, num_to_draw = 14)
 
         # creates player and appends to player list
-        players.append(Player(player_name,player_tiles_Tile))
+        players.append(Player(player_name,player_tiles_str))
     
+    # print boards
     for player in players:
         print(player,'\n')
+
+    # main game loop
+    while True:
+        for player in players:
+
+            print(f"It is player {player.name}'s turn.")
+            print(f"Here is player {player.name}'s board: {player.print_hand_tiles()}")
+            move = input("Enter a move (draw, place, rearrange): ")
+            while move not in ['draw', 'place', 'rearrange']:
+                move = input("Try again:")
+            
+            match move:
+                case 'draw':
+                    print("Drawing a tile...")
+                    # appends drawn tile into hand tiles
+                    player.hand_tiles += draw_tiles(draw_pile, num_to_draw = 1)
+                    print(player.print_hand_tiles())
+                case 'place':
+                    place_tile(player)
+                case 'rearrange':
+                    rearrange_board(player)
+        break
 
 if __name__ == '__main__':
     main()
