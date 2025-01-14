@@ -1,9 +1,11 @@
+import inflect
+
 from typing import List, Dict
 
 from classes import Player, Tile, Joker
 from game_functions import draw_tiles, place_tile, rearrange_board
 
-STARTING_HAND_SIZE = 14
+STARTING_HAND_SIZE = 104
 
 
 def set_players() -> int:
@@ -52,7 +54,7 @@ def main():
         player_name = str(player + 1)
 
         # draw tiles to player's hand (14 to start the game)
-        player_tiles_str = draw_tiles(draw_pile, num_to_draw = 14)
+        player_tiles_str = draw_tiles(draw_pile, num_to_draw = STARTING_HAND_SIZE)
 
         # creates player and appends to player list
         players.append(Player(player_name,player_tiles_str))
@@ -60,6 +62,10 @@ def main():
     # print boards
     for player in players:
         print(player,'\n')
+
+    # create inflect engine here to save memory
+    # used for ordinal formatting
+    inflect_engine = inflect.engine()
 
     # main game loop
     while True:
@@ -78,7 +84,7 @@ def main():
                     player.hand_tiles += draw_tiles(draw_pile, num_to_draw = 1)
                     print(player.print_hand_tiles())
                 case 'place':
-                    place_tile(player)
+                    place_tile(player, inflect_engine)
                 case 'rearrange':
                     rearrange_board(player)
         break
