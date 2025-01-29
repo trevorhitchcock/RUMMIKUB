@@ -1,5 +1,6 @@
 import random
-from classes import Player, Tile, Joker
+import copy
+from classes import Player, Tile, Joker, Board
 from typing import Dict, List, Any
 
 def draw_tiles(draw_pile: Dict[str,int], num_to_draw: int) -> List[str]:
@@ -30,7 +31,7 @@ def convert_str_to_Tile(player_tiles_str: str) -> List[Tile]:
             player_tiles_Tile.append(Tile(color,value,))
     return player_tiles_Tile
 
-def place_tile(player: Player, inflect_engine: Any):
+def place_tile(board: Board, player: Player, inflect_engine: Any):
     """
     Handles placing a tile for a player.
 
@@ -51,31 +52,43 @@ def place_tile(player: Player, inflect_engine: Any):
                     print(f"\nPlayer {player.name} is placing tiles on the board")
                 else:
                     print(f"\nPlayer {player.name} is placing tiles from their hand.")
-                    place_tiles_from_hand(player, inflect_engine)
+                    place_tiles_from_hand(board, player, inflect_engine)
             else:
                 print("Invalid input. Please enter 1 or 2.")
         except ValueError:
             print("Invalid input. Please enter a valid integer.")
 
-def place_tiles_from_hand(player: Player, inflect_engine: Any):
+
+def place_tiles_from_hand(board: Board, player: Player, inflect_engine: Any):
     #print(f"Here is your board: {player.print_hand_tiles()}")
     i = 1 # for printing purposes
-    move_array = []
+    current_set = []
+
+    temp_board = copy.deepcopy(board) # modify and validate move using temporary board
     
     while True:
         tile_picked = input("Enter the name of the tile to play (done to stop): ").capitalize()
-        if(tile_picked == 'done'):
-            # CHECK IF VALID MOVE HERE
+        if(tile_picked == 'Done'):
+            temp_board.add_set_to_board(current_set)
+            print(f'Checking board:\n{temp_board}')
+            # CHECK IF BOARD VALID HERE
+            if(temp_board.valid_board):
+                print("valid move")
+                board = copy.deepcopy(temp_board)
+                return board
             break
-        # check if tile is in user's board
-        
-        str_array_of_hand = player.create_string_list_of_board()
+
+        # check if tile is in user's hand
+        str_array_of_hand = player.create_string_list_of_hand()
+
         if tile_picked not in str_array_of_hand:
             print("You don't have that tile. Try again.")
         else: # tile was found in hand
-            move_array.append(tile_picked)
-        print(f"Your {inflect_engine.ordinal(i)} tile is {tile_picked}")
-        i += 1
+            # BUGGY; MUST TEST
+            str_array_of_hand.remove(tile_picked )# remove it from hand so same tile can't be played twice
+            current_set.append(tile_picked) # add it to current move array
+            print(f"Your {inflect_engine.ordinal(i)} tile is {tile_picked}.\n")
+            i += 1
 
 
 def place_tiles_on_board(player: Player):
